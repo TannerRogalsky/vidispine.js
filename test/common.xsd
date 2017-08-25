@@ -1,0 +1,2350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://xml.vidispine.com/schema/vidispine"
+    elementFormDefault="qualified"
+    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+    jaxb:version="1.0"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+    jaxb:extensionBindingPrefixes="xjc" xmlns:tns="http://xml.vidispine.com/schema/vidispine">
+
+    <xs:simpleType name="SiteIdType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([_A-Za-z]+-)?([A-Za-z_][A-Za-z0-9_]*-|(([A-Za-z_][A-Za-z0-9_]*)?\*))([0-9]{1}[0-9]{0,31})"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="UUIDType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name="URIListDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:URIListType" />
+    <xs:complexType name="URIListType">
+        <xs:sequence>
+            <xs:element name="hits" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="uri" type="xs:anyURI" maxOccurs="unbounded" minOccurs="0"></xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="MetadataSchemaElementType">
+        <xs:attributeGroup ref="tns:MetadataSchemaAttributes"/>
+        <xs:attribute name="reference" type="xs:boolean" use="optional"/>
+    </xs:complexType>
+
+    <xs:attributeGroup name="MetadataSchemaAttributes">
+        <!-- Minimum number of elements -->
+        <xs:attribute name="min" type="xs:int" use="required"/>
+        <!-- Maximum number of elements. A negative number is regarded as infinity. -->
+        <xs:attribute name="max" type="xs:int" use="required"/>
+        <xs:attribute name="name" type="xs:string" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:element name="FileDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:FileType" />
+    <xs:complexType name="FileType">
+        <xs:sequence maxOccurs="1" minOccurs="1">
+            <xs:element name="id" type="tns:SiteIdType" minOccurs="0"/>
+            <xs:element name="path" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="uri"  type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="state" type="xs:string"/>
+            <xs:element name="size" type="xs:long" minOccurs="0"/>
+            <xs:element name="hash" type="xs:string" minOccurs="0"/>
+            <xs:element name="timestamp" type="xs:dateTime" minOccurs="0"/>
+            <xs:element name="refreshFlag" type="xs:int" minOccurs="0"/>
+            <xs:element name="sequence" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="storage" type="tns:SiteIdType" minOccurs="0"/>
+            <xs:element name="storageDefinition" type="tns:StorageType" minOccurs="0"/>
+            <xs:element name="item" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="id" type="tns:SiteIdType" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="shape" minOccurs="0" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="id" type="tns:SiteIdType" minOccurs="0" maxOccurs="1"/>
+                                    <xs:element name="component" minOccurs="0" maxOccurs="unbounded">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="id" type="tns:SiteIdType" minOccurs="0" maxOccurs="1"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="metadata" type="tns:SimpleMetadataType" minOccurs="0" maxOccurs="1" />
+            <xs:element name="range" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:attribute name="start" type="xs:string" use="required"/>
+                    <xs:attribute name="count" type="xs:long" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="type" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Stuff for Shape starts here -->
+    <xs:complexType name="ResolutionType">
+        <xs:sequence>
+            <xs:element name="width" type="xs:unsignedInt"/>
+            <xs:element name="height" type="xs:unsignedInt"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="RationalType">
+        <xs:sequence>
+            <xs:element name="numerator" type="xs:int"/>
+            <xs:element name="denominator" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="TimeBaseType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:RationalType"/>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="FrameRateType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:RationalType"/>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="TimeCodeType">
+        <xs:sequence>
+            <xs:element name="samples" type="xs:long"/>
+            <xs:element name="timeBase" type="tns:TimeBaseType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="TimeIntervalType">
+        <xs:sequence>
+            <xs:element name="start" type="tns:TimeCodeType" minOccurs="0"/>
+            <xs:element name="end"   type="tns:TimeCodeType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="AspectRatioType">
+        <xs:sequence>
+            <xs:element name="horizontal" type="xs:unsignedInt"/>
+            <xs:element name="vertical" type="xs:unsignedInt"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="ComponentListDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:ComponentListType" />
+
+    <xs:complexType name = "ComponentListType">
+        <xs:sequence>
+            <xs:element name="component" minOccurs="0" maxOccurs="unbounded" type="tns:ComponentType" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="ComponentDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:ComponentType" />
+    <xs:complexType name="ComponentType">
+        <xs:sequence>
+            <xs:element name="file" type="tns:FileType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="id" type="tns:SiteIdType" minOccurs="0"/>
+
+            <!-- Flat metadata, meaning a simple list of key-value pairs.
+                 This has been put in ComponentType since both ContainerComponent and the MediaComponents
+                 have metadata. In other words, files can have both global and stream-specific metadata.
+            -->
+            <xs:element name="metadata" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="BinaryComponentDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:BinaryComponentType" />
+    <xs:complexType name="BinaryComponentType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComponentType">
+                <xs:sequence>
+                    <xs:element name="format" type="xs:string" minOccurs="0"/>      <!-- Example: idv3 -->
+                    <xs:element name="encoding" type="xs:string" minOccurs="0"/>    <!-- Example: base64, gzip -->
+                    <xs:element name="offset" type="xs:long" minOccurs="0"/>
+                    <xs:element name="length" type="xs:long" minOccurs="0"/>
+                    <xs:element name="mediaInfo" type="tns:BaseMediaInfoType" minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="ContainerComponentDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:ContainerComponentType" />
+    <xs:complexType name="ContainerComponentType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComponentType">
+                <xs:sequence>
+                    <xs:element name="duration" type="tns:TimeCodeType" minOccurs="0"/>
+                    <xs:element name="format" type="xs:string" minOccurs="0"/>
+
+                    <!-- Sub format.
+                         This field was created for transcoder ticket #186.
+                         Its exact function isn't set in stone yet.
+                         Possible values:
+
+                         * Unset
+                         * "mxf_d10"
+                    -->
+                    <xs:element name="subFormat" type="xs:string" minOccurs="0"/>
+
+                    <xs:element name="firstSMPTETimecode" type="xs:string" minOccurs="0"/>
+
+                    <!-- Corresponds to StartTimecode in TimecodeComponent in MXF -->
+                    <xs:element name="startTimecode" type="xs:long" minOccurs="0"/>
+
+                    <!-- First timestamp in container -->
+                    <xs:element name="startTimestamp" type="tns:TimeCodeType" minOccurs="0"/>
+
+                    <!-- Corresponds to RoundedTimeBase in TimecodeComponent in MXF -->
+                    <xs:element name="roundedTimeBase" type="xs:int" minOccurs="0"/>
+
+                    <!-- Corresponds to DropFrame in TimecodeComponent in MXF -->
+                    <xs:element name="dropFrame" type="xs:boolean" minOccurs="0"/>
+                    <xs:element name="timeCodeTimeBase" type="tns:TimeBaseType" minOccurs="0" />
+                    <xs:element name="mediaInfo" type="tns:BaseMediaInfoType" minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="DescriptorComponentDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:DescriptorComponentType" />
+    <xs:complexType name="DescriptorComponentType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComponentType">
+                <xs:sequence>
+                    <xs:element name="description" minOccurs="0" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <xs:simpleContent>
+                                <xs:extension base="xs:string">
+                                    <xs:attribute name="type" type="xs:string" use="required"/>
+                                </xs:extension>
+                            </xs:simpleContent>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="EDLType">
+        <xs:sequence>
+            <!-- MOV specifies length in terms of the mvhd time scale, which is simply an integer.
+                 In other words, NTSC files have a time scale of 2997, not 30000/1001.
+                 The transcoder fixes up timestamps given from mov.c, so 1700@2997 becomes 17@NTSC and stores the corrected time scale here.
+            -->
+            <xs:element name="timeScale" type="tns:TimeBaseType"/>
+            <!-- Explicit time base for EDLEntryType.start values.
+                 The purpose of this field is to reduce confusion where exactly the time base for the start values is taken from.
+                 Using this field also removes the need for running a shape deduction step in order to figure out the time base for each stream.
+                 In other words: not using this field results in hairy behavior.
+                 See T#208.
+            -->
+            <xs:element name="timeBase" type="tns:TimeBaseType" minOccurs="0"/>
+            <xs:element name="entry" type="tns:EDLEntryType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="EDLEntryType">
+        <xs:attribute name="start" type="xs:long" use="required"/>      <!-- In MediaComponentType/timeBase units -->
+        <xs:attribute name="length" type="xs:long" use="required"/>     <!-- In EDLType/timeScale units -->
+        <xs:attribute name="mediaRate" type="xs:int" use="required"/>   <!-- 16.16 fixed-point, meaning divide by 65536 to get the actual rate. Non-float to promote losslessness. Should be > 0 -->
+    </xs:complexType>
+
+    <xs:complexType name="MediaComponentType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComponentType">
+                <xs:sequence>
+                    <xs:element name="codec" type="xs:string" minOccurs="0"/>
+                    <xs:element name="timeBase" type="tns:TimeBaseType" minOccurs="0"/>
+                    <xs:element name="itemTrack" type="xs:string" minOccurs="0"/>
+                    <xs:element name="essenceStreamId" type="xs:unsignedShort" minOccurs="0"/>
+                    <xs:element name="interval" type="tns:TimeIntervalType" minOccurs="0"/>
+                    <xs:element name="bitrate" type="xs:unsignedInt" minOccurs="0"/>
+                    <xs:element name="numberOfPackets" type="xs:long" minOccurs="0"/>
+                    <xs:element name="extradata" type="xs:hexBinary" minOccurs="0"/>
+                    <xs:element name="pid" type="xs:int" minOccurs="0"/>
+                    <xs:element name="duration" type="tns:TimeCodeType" minOccurs="0"/>         <!-- Length of stream - may be different among components in the same file -->
+                    <xs:element name="profile" type="xs:int" minOccurs="0"/>                    <!-- Corresponds to AVCodecContext::profile -->
+                    <xs:element name="level" type="xs:int" minOccurs="0"/>                      <!-- Corresponds to AVCodecContext::level -->
+                    <xs:element name="edl" type="tns:EDLType" minOccurs="0"/>                   <!-- Edit Decision List - derived from elst tags -->
+                    <xs:element name="startTimestamp" type="tns:TimeCodeType" minOccurs="0"/>   <!-- First timestamp in media -->
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Returns various fields parsed by libmediainfo -->
+    <xs:complexType name="BaseMediaInfoType">
+        <xs:sequence>
+            <xs:element name="Bit_rate_mode" type="xs:string" minOccurs="0"/>               <!-- "Bit rate mode" like "CBR" or "VBR" -->
+            <xs:element name="Source" type="xs:string" minOccurs="0"/>                      <!-- "Source". QT-ref source media file, like "media.dir/foo.m2v" -->
+            <xs:element name="property" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="AudioMediaInfoType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:BaseMediaInfoType">
+                <xs:sequence/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="VideoMediaInfoType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:BaseMediaInfoType">
+                <xs:sequence>
+                    <xs:element name="Format_Settings_GOP" type="xs:string" minOccurs="0"/>         <!-- "Format settings, GOP0" like "N=1" (intra-only) or "M=2, N=60" -->
+                    <xs:element name="intra_dc_precision" type="xs:int" minOccurs="0"/>             <!-- "intra_dc_precision". 8, 9, 10 or 11 if set -->
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="AudioComponentDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:AudioComponentType" />
+    <xs:complexType name="AudioComponentType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:MediaComponentType">
+                <xs:sequence>
+                    <xs:element name="channelCount" type="xs:unsignedShort"/>
+                    <xs:element name="channelLayout" type="xs:long" minOccurs="0"/>
+                    <xs:element name="sampleFormat" type="xs:string" minOccurs="0"/>
+                    <xs:element name="frameSize" type="xs:unsignedInt" minOccurs="0"/>
+                    <xs:element name="blockAlign" type="xs:unsignedInt" minOccurs="0"/>
+
+                    <xs:element name="mediaInfo" type="tns:AudioMediaInfoType" minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="VideoComponentDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:VideoComponentType" />
+    <xs:complexType name="VideoComponentType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:MediaComponentType">
+                <xs:sequence>
+                    <xs:element name="videoStandard" minOccurs="0" maxOccurs="1">
+                        <xs:complexType>
+                            <xs:simpleContent>
+                                <xs:extension base="xs:string">
+                                    <xs:attribute name="type" type="xs:string" use="required"/>
+                                </xs:extension>
+                            </xs:simpleContent>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="resolution" type="tns:ResolutionType" minOccurs="0"/>
+                    <xs:element name="pixelFormat" type="xs:string" minOccurs="0"/>
+                    <xs:element name="maxBFrames" type="xs:unsignedShort" minOccurs="0"/>
+                    <xs:element name="pixelAspectRatio" type="tns:AspectRatioType" minOccurs="0"/>
+
+                    <!-- Field order
+                            "progressive" for progressive video
+                            "F1" for interlaced in "top field first" order
+                            "F2" for interlaced in "bottom field first" order
+
+                         Note that the meaning of F1 and F2 are opposite to S314m where Field 1 is the bottom (odd) field and vice versa.
+                         This was not known when this element was introduced, and changing this is likely to result in problems.
+                    -->
+                    <xs:element name="fieldOrder" type="xs:string" minOccurs="0"/>
+                    <xs:element name="codecTimeBase" type="tns:TimeBaseType" minOccurs="0"/>
+                    <xs:element name="averageFrameRate" type="tns:TimeBaseType" minOccurs="0"/>
+                    <xs:element name="realBaseFrameRate" type="tns:TimeBaseType" minOccurs="0"/>
+
+                    <!-- MXF-ish display rectangle.
+                         This means values straight from CDCIDescriptor for MXF,
+                         but scaled down by SAR for clap in MOV.
+                         In other words, "to display" space, not "displayed" (aka raster) space.
+                    -->
+                    <xs:element name="displayWidth" type="tns:RationalType" minOccurs="0"/>
+                    <xs:element name="displayHeight" type="tns:RationalType" minOccurs="0"/>
+                    <xs:element name="displayXOffset" type="tns:RationalType" minOccurs="0"/>
+                    <xs:element name="displayYOffset" type="tns:RationalType" minOccurs="0"/>
+
+                    <!-- DAR = displayWidth/displayHeight * containerSAR -->
+                    <xs:element name="containerSAR" type="tns:AspectRatioType" minOccurs="0"/>
+
+                    <xs:element name="colr_primaries" type="xs:int" minOccurs="0"/>
+                    <xs:element name="colr_transfer_function" type="xs:int" minOccurs="0"/>
+                    <xs:element name="colr_matrix" type="xs:int" minOccurs="0"/>
+                    <xs:element name="max_packet_size" type="xs:int" minOccurs="0"/>
+
+                    <!-- Codec-level time code information - typically set from the 25-bit value in the first MPEG-2 GOP header.
+                         Use averageFrameRate in lieu of RoundedTimeBase.
+                    -->
+                    <xs:element name="startTimecode" type="xs:long" minOccurs="0"/>
+                    <xs:element name="dropFrame" type="xs:boolean" minOccurs="0"/>
+
+                    <!-- needed to get H.264 decoding working properly in some cases -->
+                    <xs:element name="ticks_per_frame" type="xs:int" minOccurs="0"/>
+
+		    <!-- Added for T#135 -->
+		    <!-- Bit depth (default 8) -->
+		    <xs:element name="bitDepth" type="xs:int" minOccurs="0"/>
+		    <xs:element name="bitsPerPixel" type="xs:int" minOccurs="0"/>
+
+		    <!-- Color primaries in string form (c.f.  colr_primaries above -->
+		    <xs:element name="colorPrimaries" type="xs:string" minOccurs="0"/>
+
+                    <xs:element name="mediaInfo" type="tns:VideoMediaInfoType" minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="ShapeDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:ShapeType"/>
+    <xs:complexType name="ShapeType">
+        <xs:sequence>
+            <xs:element name="id" type="tns:SiteIdType" minOccurs="0"/>
+            <xs:element name="created" type="xs:dateTime" minOccurs="0" maxOccurs="1" />
+            <xs:element name="essenceVersion" type="xs:int" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="tag" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="mimeType" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="uuid" type="tns:UUIDType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="binaryComponent" type="tns:BinaryComponentType" minOccurs="0" maxOccurs="unbounded"/>
+            <!-- container is optional since we might create a ShapeType which merely helps point to source material -->
+            <xs:element name="containerComponent" type="tns:ContainerComponentType" minOccurs="0"/>
+            <xs:element name="descriptorComponent" type="tns:DescriptorComponentType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="audioComponent" type="tns:AudioComponentType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="videoComponent" type="tns:VideoComponentType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="metadata" minOccurs="0" maxOccurs="1" type="tns:SimpleMetadataType"/>
+            <xs:element name="item" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="id" type="tns:SiteIdType" minOccurs="0" maxOccurs="1"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Types for bulky metadata -->
+    <xs:element name="BulkyMetadataDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:BulkyMetadataType"/>
+    <xs:complexType name="BulkyMetadataType">
+        <xs:sequence>
+            <xs:element name="field" type="tns:BulkyMetadataPairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="tns:SiteIdType" use="optional"/>
+    </xs:complexType>
+    <xs:complexType name="BulkyMetadataPairType">
+        <xs:sequence>
+            <xs:element name="key" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element name="value" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="maps" type="tns:BulkyMapListType" minOccurs="1" maxOccurs="1"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="start" type="xs:string" use="optional"/>
+        <xs:attribute name="end" type="xs:string" use="optional"/>
+        <xs:attribute name="stream" type="xs:int" use="optional"/>
+        <xs:attribute name="channel" type="xs:int" use="optional"/>
+        <xs:attribute name="itemTrack" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:element name="BulkyMapListDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:BulkyMapListType"/>
+    <xs:complexType name="BulkyMapListType">
+        <xs:sequence>
+            <xs:element name="map" type="tns:BulkyMapType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="BulkyMapType">
+        <xs:sequence>
+            <xs:element name="entry" type="tns:BulkyMapEntryType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="BulkyMapEntryType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="key" type="xs:string" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+
+
+    <!-- Types for requesting merging according to a timeline (aka pasting together resources) -->
+    <xs:element name="TimelineJobRequestDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:TimelineJobRequestType" />
+    <xs:complexType name="TimelineJobRequestType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="outputUri" type="xs:anyURI"/>
+            <xs:element name="containerFormat" type="xs:string"/>
+            <xs:element name="stream" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="input" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="uri" type="xs:anyURI"/>
+                                    <xs:element name="stream" type="xs:unsignedShort"/>
+                                    <xs:element name="interval" type="tns:TimeIntervalType"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+
+            </xs:element>
+
+            <!--xs:choice>
+                <xs:element name="simpleTimeline" type="tns:SimpleTimelineType"/>
+                <xs:element name="timeline" type="tns:TimelineType"/>
+            </xs:choice>
+            <xs:element name="thumbnailResourceUri" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/-->
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobOTIFType">
+        <xs:sequence>
+            <xs:element name="trackerPlugin" type="xs:string" minOccurs="1"/>
+            <xs:element name="versionMajor" type="xs:int" minOccurs="1"/>
+            <xs:element name="versionMinor" type="xs:int" minOccurs="1"/>
+            <xs:element name="versionPatch" type="xs:int" minOccurs="1"/>
+            <xs:element name="bulkyMetadataURI" type="xs:anyURI" minOccurs="0" maxOccurs="1" />
+            <xs:element name="configuration" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="resource" type="tns:NameURIPairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Types for requesting a more complex "map this to that" type of transcode job -->
+    <xs:complexType name="ComplexJobOutputType">
+        <xs:sequence>
+            <!-- Use multiple id element to multiplex the encoded data to multiple
+                 files without having to encode more than once
+            -->
+            <xs:element name="id" type="xs:int" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="start" type="tns:TimeCodeType" minOccurs="0"/>
+            <xs:element name="codec" type="xs:string" minOccurs="0"/>
+
+            <!-- FOURCC. Corresponds to codec_tag in libav* terms,
+                 hence the name. Typically a four-character ASCII string.
+                 May need to be fairly arbitrary constants though, so
+                 an xs:string is insufficient. Hence an int is used.
+
+                 An earlier way of setting the codecTag for four-character
+                 strings was to set the first character as the LSB and so on.
+                 In other words:
+                  "ai55" -> 'a' + ('i' << 8) + ('5' << 16) + ('5' << 24)
+                 However, this use has been deprecated.
+
+                 Instead, just set the codecTagString to the character string, as in
+                 <codecTagString>ai55</codecTagString>
+            -->
+            <xs:element name="codecTag" type="xs:unsignedInt" minOccurs="0"/>
+            <xs:element name="codecTagString" type="xs:string" minOccurs="0"/>
+
+            <!-- Name that the muxer should use in the output file for the codec.
+                 Corresponds to codec_name in libav*.
+            -->
+            <xs:element name="codecName" type="xs:string" minOccurs="0"/>
+
+            <xs:element name="bitrate" type="xs:unsignedInt" minOccurs="0"/>
+            <xs:element name="timeBase" type="tns:TimeBaseType" minOccurs="0"/>
+
+            <!-- Profile/presets to use.
+                 MainConcept examples: "ipod", "baseline", "main", "high".
+                 For libavcodec, see presets/ directory. Examples: "main", "normal", "hq".
+            -->
+            <xs:element name="preset" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+
+            <!-- Edit Decision List -->
+            <xs:element name="edl" type="tns:EDLType" minOccurs="0"/>
+
+            <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+
+            <xs:element name="objectTracking" type="tns:ComplexJobOTIFType" minOccurs="0" maxOccurs="1"/>
+
+            <xs:element name="metadata" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobAudioOutputType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComplexJobOutputType">
+                <xs:sequence>
+                    <!-- See generateThumbnails/uri -->
+                    <xs:element name="thumbnailUri" type="xs:anyURI" minOccurs="0" maxOccurs="unbounded"/>    <!-- If set, upload thumbnail to specified URIs -->
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="OverlayType">
+        <xs:sequence>
+            <!-- URI for image to overlay
+                 Should use a pixel format suitable for alpha blending,
+                 like 8-bit RGBA.
+            -->
+            <xs:element name="uri" type="xs:anyURI" maxOccurs="unbounded"/>
+            <xs:element name="range" type="tns:SequenceRangeType" maxOccurs="unbounded"/>
+            <xs:element name="id" minOccurs="0" maxOccurs="1" type="tns:SiteIdType"/>
+
+            <!-- Coordinates in video to place overlay at. Can be negative -->
+            <xs:element name="x" type="xs:int"/>
+            <xs:element name="y" type="xs:int"/>
+
+            <!-- Optional: time interval to perform overlay in -->
+            <xs:element name="interval" type="tns:TimeIntervalType" minOccurs="0"/>
+            <xs:element name="opacity" minOccurs="0" maxOccurs="1" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TextOverlayType">
+        <xs:sequence>
+            <xs:element name="text" type="tns:TextRenditionType"/>
+
+            <!-- Optional: time interval to perform overlay in -->
+            <xs:element name="interval" type="tns:TimeIntervalType" minOccurs="0"/>
+            <xs:element name="opacity" minOccurs="0" maxOccurs="1" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobVideoOutputType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComplexJobOutputType">
+                <xs:sequence>
+                    <xs:element name="scaling" minOccurs="0" maxOccurs="1" type="tns:ScalingType"/>
+
+                    <!-- Deprecated. Use <scaling> instead -->
+                    <xs:element name="resolution" type="tns:ResolutionType" minOccurs="0"/>
+
+                    <!-- Pixel format to use, like "yuv420p", "yuv422p", "uyvy422" etc. -->
+                    <xs:element name="pixelFormat" type="xs:string" minOccurs="0"/>
+
+                    <xs:element name="gopSize" type="xs:unsignedShort" minOccurs="0"/>
+                    <xs:element name="maxBFrames" type="xs:unsignedShort" minOccurs="0"/>
+
+                    <!-- rc_buffer_size, size of VBV buffer -->
+                    <xs:element name="rcBufferSize" type="xs:unsignedInt" minOccurs="0"/>
+
+                    <!-- rc_initial_buffer_occupancy. Should equal rc_buffer_size
+                         when encoding CBR
+                    -->
+                    <xs:element name="rcInitialBufferOccupancy" type="xs:unsignedInt" minOccurs="0"/>
+
+                    <!-- Minimum and maximum bitrate. Typically used for CBR output.
+                         Note that for CBR, such as IMX50, you must also set
+                         rcBufferSize and rcInitialOccupancy appropriately.
+                         In the IMX50 case they should both be at least 2 Mbit
+                         and equal.
+                    -->
+                    <xs:element name="minBitrate" type="xs:unsignedInt" minOccurs="0"/>
+                    <xs:element name="maxBitrate" type="xs:unsignedInt" minOccurs="0"/>
+
+                    <xs:element name="colorSiting" type="xs:unsignedShort" minOccurs="0"/>   <!-- Color Siting info for MXF output, see SMPTE 377M, E.2.35 -->
+                    <xs:element name="generateThumbnails" minOccurs="0">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <!-- If set, send thumbnails to the specified URI, replacing "callback" with the licensing IP.
+                                     For example, if the transcoder has been given a license by 12.34.56.78 then setting this to
+
+                                      http://callback:8080/API/item/VX-1234/thumbnail
+
+                                     results in a thumbnail at 0@PAL being PUT to:
+
+                                      http://12.34.56.78:8080/API/item/VX-1234/thumbnail/0@PAL
+                                -->
+                                <xs:element name="uri" type="xs:anyURI" maxOccurs="unbounded"/>
+                                <xs:element name="minDelay" type="tns:TimeCodeType" minOccurs="0"/>
+                                <xs:element name="maxDelay" type="tns:TimeCodeType" minOccurs="0"/>
+                                <xs:element name="background" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                <!-- If set, use scene change detection instead of grabbing one frame every 10th second.
+                                     This only has to be set - its value can be anything, even the empty string.
+                                     It should really be an optional boolean, but we keep it as an optional string for backward compatibility.
+                                -->
+                                <xs:element name="detectorPlugin" type="xs:string" minOccurs="0"/>
+                                <xs:element name="resolution" type="tns:ResolutionType" minOccurs="0"/>
+                                <xs:element name="period" type="tns:TimeCodeType" minOccurs="0" maxOccurs="1"/>
+                                <xs:element name="bulkyMetadataURI" type="xs:anyURI" minOccurs="0" maxOccurs="1" />
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="generatePosters" minOccurs="0">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="background" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                <xs:element name="resolution" type="tns:ResolutionType" minOccurs="0"/>
+                                <!-- See generateThumbnails/uri -->
+                                <xs:element name="uri" type="xs:anyURI" maxOccurs="unbounded"/>
+                                <xs:element name="timeCode" type="tns:TimeCodeType" maxOccurs="unbounded"/>
+                                <xs:element name="format" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+                            </xs:sequence>
+                            <xs:attribute name="smallPosters" type="xs:boolean" use="optional"/>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="detectFaces" minOccurs="0">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="metadataUri" type="xs:anyURI"/>
+                                <xs:element name="faceDetectorPlugin" type="xs:string"/>    <!-- maps to TranscoderConfigurationDocument/faceDetectorPlugin/alias -->
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="overlay" type="tns:OverlayType" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="textOverlay" type="tns:TextOverlayType" minOccurs="0" maxOccurs="unbounded"/>
+
+                    <!-- If set, strip SPS/PPS from packets before handing them off to the muxer.
+                         This is required when muxing AVC-Intra for Avid Media Composer, and possibly FCP.
+                    -->
+                    <xs:element name="stripParameterSets" type="xs:boolean" minOccurs="0"/>
+
+                    <!-- If set, add SPS/PPS to the first packet output by the demuxer for this stream.
+                         The data is taken from extradata - set extradata as well if it is not
+                         present or if it is incorrect
+                    -->
+                    <xs:element name="addParameterSets" type="xs:boolean" minOccurs="0"/>
+
+                    <!-- If set, explicitly use this for the parameter set data.
+                         If not set, then whatever the demuxer reports as extradata for this stream will be used.
+                    -->
+                    <xs:element name="parameterSets" type="xs:hexBinary" minOccurs="0"/>
+
+                    <!-- If set, use this level.
+                         For H.264, the value of this should be ten times the decimal value of the level.
+                         In other words, 1.0 -> 10, 5.1 -> 51 etc.
+                         This applies for both libx264 and MainConcept.
+                         If used, then profile should also be set (via <preset>).
+                    -->
+                    <xs:element name="level" type="xs:int" minOccurs="0"/>
+
+                    <!-- Deprecated -->
+                    <xs:element name="disableFrameDupDrop" type="xs:boolean" minOccurs="0" />
+
+                    <!-- Use <forceCFR> to force the output to be CFR, according to <timeBase>.
+                         For instance, if timeBase = 1/25 then the transcoder will take all frames
+                         from the input and make all of them 40 ms long.
+                         This is useful for formats where the first few frames have bad durations,
+                         or where the framerate of the entire file is demonstrably wrong.
+                         Not used when remuxing.
+                    -->
+                    <xs:element name="forceCFR" type="xs:boolean" minOccurs="0" />
+
+                    <!-- If true, burn the input file's timecode in the output -->
+                    <xs:element name="burnTimecode" type="xs:boolean" minOccurs="0" />
+
+                    <!-- Only used for image transcodes -->
+                    <xs:element name="imageQuality" type="xs:integer" minOccurs="0" />
+
+                    <!-- MXF-ish display rectangle.
+                         This means values straight from CDCIDescriptor for MXF,
+                         but scaled down by SAR for clap in MOV.
+                         In other words, "to display" space, not "displayed" (aka raster) space.
+                    -->
+                    <xs:element name="displayWidth" type="tns:RationalType" minOccurs="0"/>
+                    <xs:element name="displayHeight" type="tns:RationalType" minOccurs="0"/>
+                    <xs:element name="displayXOffset" type="tns:RationalType" minOccurs="0"/>
+                    <xs:element name="displayYOffset" type="tns:RationalType" minOccurs="0"/>
+
+                    <!-- DAR = displayWidth/displayHeight * containerSAR -->
+                    <xs:element name="containerSAR" type="tns:AspectRatioType" minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!--
+        ScalingType
+
+        Used to set cropping and scaling parameters to the transcoder.
+
+        By default, the transcoder will attempt to maintain the display aspect
+        ratio (DAR) of the cropped input. Use targetDAR to specify a different
+        DAR to maintain.
+
+        The transcoder will typically try to adjust the PAR so that the cropped
+        picture ends up with the correct DAR. This minimizes the amount of
+        processing required. Use pixelAspectRatio to set the PAR explicitly, in
+        which case either width or height will be adjusted to maintain DAR.
+
+        Use width and height to scale in those dimensions. If only one of them
+        is set and PAR is set, the other one will be adjusted so the result
+        matches the target DAR. If both are set and and PAR is set, the
+        transcoder will take them as is.
+
+        Setting neither width nor height while PAR is set results in undefined
+        behavior.
+
+        The transcoder will always double-check the resulting dimensions and PAR
+        against the desired DAR. If there's a mismatch, the job will fail. If
+        you want to force the transcoder to accept your settings, set targetDAR
+        manually to the resulting DAR.
+    -->
+    <xs:complexType name="ScalingType">
+        <xs:sequence>
+            <xs:element name="width" minOccurs="0" maxOccurs="1" type="xs:unsignedInt"/>
+            <xs:element name="height" minOccurs="0" maxOccurs="1" type="xs:unsignedInt"/>
+
+            <!-- Specifies the number of pixels to crop out of each side.
+                 Be careful when cropping odd numbers of pixels in any dimension
+                 that is subsampled. For instance, cropping an odd number of
+                 lines in YUV 4:2:0. This will cause the chroma siting to shift.
+            -->
+            <xs:element name="top" minOccurs="0" maxOccurs="1" type="xs:int"/>
+            <xs:element name="bottom" minOccurs="0" maxOccurs="1" type="xs:int"/>
+            <xs:element name="left" minOccurs="0" maxOccurs="1" type="xs:int"/>
+            <xs:element name="right" minOccurs="0" maxOccurs="1" type="xs:int"/>
+            <xs:element name="padColor" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- HTML (#rrggbb), if crop is negative -->
+
+            <!-- Specifies rotation. If no resolution/PAR is set, the PAR
+                 and resolution of the input is inverted to (hopefully)
+                 result in a pixel-to-pixel accurate flipping.
+                 Valid values are "left", "right" and "upsidedown" for 90, -90 and
+                 180 degrees rotation, respectively
+            -->
+            <xs:element name="rotate" minOccurs="0" maxOccurs="1" type="xs:string"/>
+
+            <!-- PAR -->
+            <xs:element name="pixelAspectRatio" minOccurs="0" maxOccurs="1" type="tns:AspectRatioType"/>
+
+            <!-- Desired display aspect ratio -->
+            <xs:element name="targetDAR" minOccurs="0" maxOccurs="1" type="tns:AspectRatioType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobSubtitleOutputType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComplexJobOutputType">
+                <xs:sequence/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="BorderType">
+        <!-- Alpha + RGB color of border -->
+        <xs:attribute name="a" type="xs:unsignedByte" use="required"/>
+        <xs:attribute name="r" type="xs:unsignedByte" use="required"/>
+        <xs:attribute name="g" type="xs:unsignedByte" use="required"/>
+        <xs:attribute name="b" type="xs:unsignedByte" use="required"/>
+
+        <!-- Width of border in pixels in display space -->
+        <xs:attribute name="width" type="xs:unsignedByte" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="TransitionType">
+        <xs:sequence>
+            <xs:element name="duration" type="tns:TimeCodeType"/>
+            <xs:choice>
+                <!-- SMPTE wipe code (see S258m) -->
+                <xs:element name="wipe" type="xs:int"/>
+
+                <!-- Other transition, like "CrossDissolve". Corresponds to Fabric's transitionSubTypeType -->
+                <xs:element name="transition" type="xs:string"/>
+            </xs:choice>
+	    <xs:element name="horizRepeat" type="xs:int" minOccurs="0"/>
+	    <xs:element name="vertRepeat" type="xs:int" minOccurs="0"/>
+
+            <!-- startPercentage and endPercentage can optionally be used to override the normal 0-100% transition range -->
+            <xs:element name="startPercentage" type="xs:int" minOccurs="0"/>
+            <xs:element name="endPercentage" type="xs:int" minOccurs="0"/>
+
+            <!-- If set and true, reverse the direction of the wipe -->
+            <xs:element name="reverse" type="xs:boolean" minOccurs="0"/>
+
+            <xs:element name="border" type="tns:BorderType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Generic "I want this stream from that input" type. Works for both audio and video -->
+    <xs:complexType name="ComplexJobInputType">
+        <xs:sequence>
+            <xs:element name="id" type="xs:int"/>
+            <xs:element name="stream" type="xs:unsignedShort"/>
+
+            <!-- Optional: transition effect to use when this input is followed by another input in a timeline -->
+            <xs:element name="transition" type="tns:TransitionType" minOccurs="0"/>
+
+            <!-- Optional: Use this to set settings for decoders -->
+            <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+          Input type for grabbing a specific channel from an input audio stream.
+          Several of these as inputs in a connection make it possible to create a new stream from M existing channels in N input streams.
+    -->
+    <xs:complexType name="ComplexJobAudioChannelMapInputType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComplexJobInputType">
+                <xs:sequence>
+                    <xs:element name="channel" type="xs:unsignedShort"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Input type for joining together several mono audio sequences
+         In other words, this type defines a mono timeline.
+         The mono intervals specified by each ComplexJobAudioChannelMapInputType
+         element in this type are joined together to produce the output.
+
+         Several ComplexJobAudioChannelSequenceInputType elements are used in
+         ComplexJobType to produce a full timeline - one for each channel.
+
+         Note that if no channels need to be extracted separately a
+         ComplexJobInputType array should be use instead (see
+         ComplexJobType/connection/input).
+    -->
+    <xs:complexType name="ComplexJobAudioChannelSequenceInputType">
+        <xs:sequence>
+            <xs:element name="input" type="tns:ComplexJobAudioChannelMapInputType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobMixType">
+        <xs:attribute name="id" type="xs:int" use="required"/>
+        <xs:attribute name="stream" type="xs:unsignedShort" use="required"/>
+        <xs:attribute name="channel" type="xs:unsignedShort" use="required"/>
+        <xs:attribute name="gain" type="xs:float" use="required"/>              <!-- linear; 1.0 = 0 dB etc. -->
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobMixInputType">
+       <xs:sequence>
+            <xs:element name="mix" type="tns:ComplexJobMixType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Used to request extraction of various types of metadata from input files to be reported to a resource as BulkyMetadata -->
+    <xs:complexType name="ComplexJobBulkyMetadataRequestType">
+        <xs:sequence>
+            <xs:element name="targetUri" type="xs:anyURI"/>                                 <!-- URI to write BulkyMetadata to -->
+            <xs:element name="failIfTimecodeNotPresent" type="xs:boolean" minOccurs="0"/>   <!-- If true, fail the job if we didn't find a single timecode -->
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Information needed by the PartialFileDemuxer -->
+    <xs:complexType name="PartialFileDemuxerInfoType">
+        <xs:sequence>
+            <!-- The user can either use a full desriptor or give a URI pointing to one -->
+            <xs:choice>
+                <xs:element name="descriptor" type="tns:PartialFileDescriptorType"/>
+                <xs:element name="descriptorLocation" type="xs:anyURI"/>
+            </xs:choice>
+
+            <!-- Offset into original file that ComplexJobType/input/uri
+                 consists of. In other words, how far into the file the binary
+                 blob was cut.
+            -->
+            <xs:element name="byteOffset" type="xs:long" minOccurs="0"/>
+            <xs:element name="adjustForPTSPredecessors" type="xs:boolean" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobAtomType">
+        <xs:attribute name="uri" type="xs:anyURI" use="required"/>
+
+        <!-- generated if not set -->
+        <xs:attribute name="sourcePackageID" type="tns:UMIDType" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="AnalyzeAudioChannelType">
+        <xs:sequence>
+            <xs:element name="tone" type="xs:float" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+
+        <!-- Which channel in which stream to use these tones and thresholds for -->
+        <xs:attribute name="stream" type="xs:unsignedShort" use="required"/>
+        <xs:attribute name="channel" type="xs:unsignedShort" use="required"/>
+
+        <!-- Silence threshold. Linear value proportional to maximum sample value.
+             In other words:
+              0.0  = -inf dB
+              0.001=  -30 dB (default)
+              1.0  =    0 dB
+        -->
+        <xs:attribute name="thresh" type="xs:float" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="AnalyzeAudioType">
+        <xs:sequence>
+            <xs:element name="otif" type="tns:ComplexJobOTIFType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="AnalyzeVideoType">
+        <xs:sequence>
+            <xs:element name="otif" type="tns:ComplexJobOTIFType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Used for analyzing input video. See transcoder tickets #82 and #83 -->
+    <xs:complexType name="ComplexJobAnalyzeType">
+        <xs:sequence>
+            <xs:element name="channel" type="tns:AnalyzeAudioChannelType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="audio" type="tns:AnalyzeAudioType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="video" type="tns:AnalyzeVideoType" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute name="metadataUri" type="xs:anyURI" use="required"/>
+
+        <!-- Thresholds are relative to the maximum pixel value, meaning values around 0-0.1 are reasonable -->
+        <xs:attribute name="blackThresh" type="xs:float" use="optional"/>
+        <xs:attribute name="blackPercentage" type="xs:int" use="optional"/>
+        <xs:attribute name="barsThresh" type="xs:float" use="optional"/>
+        <xs:attribute name="barsPercentage" type="xs:int" use="optional"/>
+        <xs:attribute name="freezeThresh" type="xs:float" use="optional"/>
+        <xs:attribute name="freezeTime" type="xs:float" use="optional"/>
+    </xs:complexType>
+
+    <!-- Used for pairing a resource with a name in the OTIF type -->
+    <xs:complexType name="NameURIPairType">
+        <xs:sequence>
+            <xs:element name="name" minOccurs="1" maxOccurs="1" type="xs:string"/>
+            <xs:element name="uri" minOccurs="1" maxOccurs="1" type="xs:anyURI"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TranscoderJobType">
+        <xs:sequence>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ComplexJobOutputFormatType">
+        <xs:sequence>
+            <xs:element name="id" type="xs:int"/>
+
+            <xs:choice>
+                <!-- Normal single-file output -->
+                <xs:element name="uri" type="xs:anyURI"/>
+
+                <!-- For multi-OPAtom output (mxf_multiatom*)
+                    The number of connections to the muxer must equal the number of atom elements here
+                -->
+                <xs:element name="atom" type="tns:ComplexJobAtomType" maxOccurs="unbounded"/>
+            </xs:choice>
+
+            <xs:element name="containerFormat" type="xs:string"/>
+            <xs:element name="overlay" type="tns:OverlayType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="textOverlay" type="tns:TextOverlayType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="dms1Source" minOccurs="0">
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="demuxerId" type="xs:int"/>
+                        <xs:element name="metadata" type="tns:DMS1Type"/>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+            <!-- DEPRECATED: String representation of the SMPTE 12M time code to use for the first frame -->
+            <xs:element name="initialSMPTETimecode" type="xs:string" minOccurs="0"/>
+
+            <!-- Corresponds to StartTimecode in TimecodeComponent in MXF -->
+            <xs:element name="startTimecode" type="xs:long" minOccurs="0"/>
+
+            <!-- Corresponds to RoundedTimeBase in TimecodeComponent in MXF -->
+            <xs:element name="roundedTimeBase" type="xs:int" minOccurs="0"/>
+
+            <!-- Corresponds to DropFrame in TimecodeComponent in MXF -->
+            <xs:element name="dropFrame" type="xs:boolean" minOccurs="0"/>
+
+            <!-- Set to true if muxing MOV and the user wants the job to fail if any stream lacks an estimate for numberOfPackets -->
+            <xs:element name="requireFaststart" type="xs:boolean" minOccurs="0"/>
+            <!-- Set to desired bitrate for CBR muxing: Mainly used for mpegts -->
+            <xs:element name="muxrate" type="xs:unsignedInt" minOccurs="0"/>
+
+            <!-- If using a muxer that supports outputing a PartialFileDescriptorDocument,
+                 setting this causes the resulting document to be written
+                 to the specified URI when the job finishes.
+            -->
+            <xs:element name="pfdTargetUri" type="xs:anyURI" minOccurs="0"/>
+
+            <!-- Material and tape packages to use in the file -->
+            <xs:element name="mxfPackages" type="tns:MXFPackagesType" minOccurs="0"/>
+
+            <!-- Global flat metadata -->
+            <xs:element name="metadata" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+
+            <!-- MaterialPackage -> Name for MXF.
+                 Not applicable to most other formats (except maybe MOV).
+            -->
+            <xs:element name="clipName" type="xs:string" minOccurs="0"/>
+
+            <!-- Controls how the maximum time period that each chunk of samples is going to be, only used for output of QuickTime files (MOV/MP4) -->
+            <xs:element name="maxChunkDuration" type="tns:TimeCodeType" minOccurs="0"/>
+
+            <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <xs:element name="ComplexJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:ComplexJobType" />
+    <xs:element name="ImageJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:ComplexJobType" />
+    <xs:complexType name="ComplexJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="input" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="id" type="xs:int"/>
+
+                        <!-- Use multiple URIs if transcoding image sequences -->
+                        <xs:element name="uri" type="xs:anyURI" maxOccurs="unbounded"/>
+
+                        <xs:element name="range" type="tns:SequenceRangeType" maxOccurs="unbounded"/>
+
+                        <xs:element name="partialFile" type="tns:PartialFileDemuxerInfoType" minOccurs="0"/>
+                        <xs:element name="interval" type="tns:TimeIntervalType" minOccurs="0"/>
+
+                        <!-- If set to true, then interval applies to DTS, not PTS.
+                             This may be useful if remuxing and the input file lacks PTS:es.
+                             We almost always want to filter frames/packets on PTS though.
+                             Use of this is discouraged for now.
+                        -->
+                        <xs:element name="intervalIsDts" type="xs:boolean" minOccurs="0"/>
+
+                        <xs:element name="dms1TargetUri" type="xs:anyURI" minOccurs="0"/>
+                        <!-- faststartDuration is needed if muxing MOV and faststart is desired and the number of packets for each stream in the input is unknown or wrong.
+                             The transcoder will make an estimate for the number of packets and the muxer will use that to reserve space in the header for the moov tag.
+                             Set this value to the length of the input if known through some other means or failing that, set it to a high value like ten hours.
+
+                             The override attribute should be set to true if the transcoder is wrong regarding the duration of the input or the number of packets for some stream.
+                        -->
+                        <xs:element name="faststartDuration" minOccurs="0">
+                            <xs:complexType>
+                                <xs:complexContent>
+                                    <xs:extension base="tns:TimeCodeType">
+                                        <xs:attribute name="override" type="xs:boolean" use="required"/>
+                                    </xs:extension>
+                                </xs:complexContent>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="bulkyMetadataRequest" type="tns:ComplexJobBulkyMetadataRequestType" minOccurs="0"/>
+                        <!-- Both of these elemets are hacks to handle broken files. The integer is the index of the videostream to which the hack should be applied. -->
+                        <xs:element name="scanForStartPTS" type="xs:int" minOccurs="0" />
+                        <xs:element name="doubleDurationHack" type="xs:int" minOccurs="0" />
+
+                        <!-- Optional: Use this to set settings for demuxers -->
+                        <xs:element name="demuxerSetting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+
+                        <xs:element name="analyze" type="tns:ComplexJobAnalyzeType" minOccurs="0"/>
+                        <!-- Use for setting a page number (in PDFs) -->
+                        <xs:element name="pageno" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="output" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComplexJobOutputFormatType"/>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="connection" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:choice>
+                            <!-- Use of more than one input means that the streams should be concatenated -->
+                            <xs:element name="input" type="tns:ComplexJobInputType" minOccurs="1" maxOccurs="unbounded"/>
+                            <!-- Used to extract and interleave channels from multiple input streams into this audio stream -->
+                            <xs:element name="audioChannelMapInput" type="tns:ComplexJobAudioChannelMapInputType" minOccurs="1" maxOccurs="unbounded"/>
+                            <!-- Used to interleave several mono timelines into this audio stream -->
+                            <xs:element name="audioChannelSequenceInput" type="tns:ComplexJobAudioChannelSequenceInputType" minOccurs="1" maxOccurs="unbounded"/>
+
+                            <!-- Used to mix several mono streams into one multi-channel stream
+                                 Each audioMixInput element specifies the mix matrix for one mono channel in this stream -->
+                            <xs:element name="audioMixInput" type="tns:ComplexJobMixInputType" minOccurs="1" maxOccurs="unbounded"/>
+                        </xs:choice>
+                        <xs:choice>
+                            <xs:element name="audioOutput" type="tns:ComplexJobAudioOutputType"/>
+                            <xs:element name="videoOutput" type="tns:ComplexJobVideoOutputType"/>
+                            <xs:element name="subtitleOutput" type="tns:ComplexJobSubtitleOutputType"/>
+                        </xs:choice>
+                        <!-- PID, or similar per-stream ID for use by the muxer -->
+                        <xs:element name="pid" type="xs:int" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:extension>
+    </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="XMPReadOperation">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="uri" type="xs:anyURI" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="XMPWriteOperation">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="uri" type="xs:anyURI" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="xmp" type="xs:string" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="XMPJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:XMPJobType" />
+    <xs:complexType name="XMPJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+                <xs:sequence>
+                    <xs:element name="read" type="tns:XMPReadOperation" minOccurs="0" maxOccurs="unbounded" />
+                    <xs:element name="write" type="tns:XMPWriteOperation" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="TransferOperation">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="sourceUri" type="xs:anyURI" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="destinationUri" type="xs:anyURI" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="TransferJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:TransferJobType" />
+    <xs:complexType name="TransferJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+                <xs:sequence>
+                    <xs:element name="transfer" type="tns:TransferOperation" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="HashComputeOperation">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="uri" type="xs:anyURI" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="function" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="HashJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:HashJobType" />
+    <xs:complexType name="HashJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+                <xs:sequence>
+                    <xs:element name="compute" type="tns:HashComputeOperation" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="ShapeDeductionJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:ShapeDeductionJobType" />
+    <xs:complexType name="ShapeDeductionJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="input" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="uri" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="range" type="tns:SequenceRangeType" maxOccurs="unbounded"/>
+                        <xs:element name="image" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="useMediaInfo" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="verbose" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+                        <!-- Use for setting a page number (in PDFs) -->
+                        <xs:element name="pageno" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="DurationJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:DurationJobType" />
+    <xs:complexType name="DurationJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="input" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="uri" type="xs:anyURI" minOccurs="1" maxOccurs="1"/>
+                        <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Types used for defining a MOV index generation job -->
+    <xs:element name="MOVIndexJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:MOVIndexJobType"/>
+    <xs:complexType name="MOVIndexJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="targetUri" type="xs:anyURI"/>         <!-- http://example.com/index.mov -->
+            <xs:element name="source" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="uri" type="xs:anyURI"/>   <!-- absolute URI to derive index from. example: http://example.com/essence/video.m2v -->
+                        <xs:element name="alias" type="xs:anyURI" minOccurs="0"/> <!-- relative URI to write to file. example:     essence/video.m2v -->
+                        <xs:element name="absoluteAlias" type="xs:anyURI" minOccurs="0"/> <!-- absolute URI to write to file. example:     /mnt/something/essence/video.m2v -->
+                        <xs:element name="setting" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="MXFTimecodeExtractionJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:MXFTimecodeExtractionJobType"/>
+    <xs:complexType name="MXFTimecodeExtractionJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="sourceUri" type="xs:anyURI"/>         <!-- URI to read MXF from -->
+            <xs:element name="targetUri" type="xs:anyURI"/>         <!-- URI to write BulkyMetadata to -->
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Generates an Op1b MXF file that points to several pieces of external essence -->
+    <xs:element name="MXFOp1bJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:MXFOp1bJobType"/>
+    <xs:complexType name="MXFOp1bJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="output" type="xs:anyURI"/>        <!-- URI to write to -->
+            <xs:element name="reference" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <!-- URI to read metadata from. Usually equal to locator[0] -->
+                        <xs:element name="source" type="xs:anyURI"/>
+                        <!-- List of stream the user wants to include in this reference -->
+                        <xs:element name="stream" type="xs:unsignedShort" maxOccurs="unbounded"/>
+                        <!--
+                             locator: List of network locators (URIs) to external essence, ordered by preference.
+                                      Relative URIs should go first, absolute URIs as fallbacks near the end.
+                                 Ex.: <locator>essence/video.m2v</locator>
+                                      <locator>ftp://example.com/essence/video.m2v</locator>
+                        -->
+                        <xs:element name="locator" type="xs:anyURI" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="SegmentationJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:SegmentationJobType"/>
+    <xs:complexType name="SegmentationJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <!-- URI to material to segment. example: http://example.com/video.ts -->
+            <xs:element name="input" type="xs:anyURI"/>
+            <!-- URI to write playlist to when done. example: http://example.com/foo.m3u -->
+            <xs:element name="playlistOutput" type="xs:anyURI"/>
+            <!-- The prefix and postfix combine with a number to form the full URI. example:
+
+                     prefix = "http://example.com/media/segment"
+                    postfix = ".ts"
+                  segment 1 = http://example.com/media/segment1.ts
+                  segment 2 = http://example.com/media/segment2.ts etc.
+            -->
+            <xs:element name="segmentUriPrefix" type="xs:string"/>
+            <xs:element name="segmentUriPostfix" type="xs:string"/>
+            <!-- Container format to use for all segments. example: "mpegts" -->
+            <xs:element name="containerFormat" type="xs:string"/>
+            <!-- Suggested length of each segment. The transcoder will do its best if this is not a multiple of the GOP length -->
+            <xs:element name="segmentLength" type="tns:TimeCodeType"/>
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- XML types for NLEJob -->
+
+    <xs:complexType name="SubClipType">
+        <xs:attribute name="id" type="xs:int" use="required"/>
+        <xs:attribute name="start" type="xs:int" use="required"/>
+        <xs:attribute name="length" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="ClipType">
+        <xs:sequence>
+            <xs:element name="subClip" type="tns:SubClipType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="uri" type="xs:anyURI" use="optional"/>
+        <xs:attribute name="stream" type="xs:unsignedShort" use="optional"/>
+        <xs:attribute name="id" type="xs:anyURI" use="optional"/>
+        <xs:attribute name="track" type="xs:unsignedShort" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="VideoClipType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ClipType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="AudioClipType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ClipType">
+                <xs:attribute name="channel" type="xs:unsignedShort" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="TextRenditionType">
+        <xs:sequence>
+            <xs:element name="line" type="xs:string" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="align" type="xs:string" use="optional"/>        <!-- Text alignment. May be "center" (default), "left" or "right" -->
+        <xs:attribute name="x" type="xs:int" use="optional"/>               <!-- detault = 0. Center of text box relative to the center of the frame, in pre-SAR pixels  (X part) -->
+        <xs:attribute name="y" type="xs:int" use="optional"/>               <!-- default = 0. Center of text box relative to the center of the frame, in pre-SAR pixels  (Y part) -->
+        <xs:attribute name="xRel" type="xs:double" use="optional"/>               <!-- optional, overrides x if set, in units of full width -->
+        <xs:attribute name="yRel" type="xs:double" use="optional"/>               <!-- optional, overrides y if set, in units of full height -->
+        <xs:attribute name="horizontalBase" type="xs:string" use="optional"/>     <!-- optional, only used if xRel is set, specifies if corner specifies left of test box, center (default), or right -->
+        <xs:attribute name="verticalBase" type="xs:string" use="optional"/>       <!-- optional, only used if yRel is set, specifies if corner specifies top of test box, middle (default), or bottom -->
+        <xs:attribute name="font" type="xs:string" use="optional"/>         <!-- default = "Arial". Font to use -->
+        <xs:attribute name="size" type="xs:unsignedInt" use="optional"/>    <!-- default = 12. Size of font in pixels -->
+        <xs:attribute name="sizeRel" type="xs:double" use="optional"/>    <!-- optional, overrides size if set, size of font in units of full height -->
+        <xs:attribute name="r" type="xs:unsignedByte" use="optional"/>      <!-- default = 255. Text color, red -->
+        <xs:attribute name="g" type="xs:unsignedByte" use="optional"/>      <!-- default = 255. Text color, green -->
+        <xs:attribute name="b" type="xs:unsignedByte" use="optional"/>      <!-- default = 255. Text color, blue -->
+        <xs:attribute name="a" type="xs:unsignedByte" use="optional"/>      <!-- default = 255. Text color, alpha -->
+
+        <!-- Outline type. Values:
+               "none" = No outline (default)
+                "box" = Draw solid box behind text, SVT style
+             "stroke" = Stroke text
+        -->
+        <xs:attribute name="outline" type="xs:string" use="optional"/>
+
+        <!--    "box": How much larger the box is on each side compared to the text's bounding box
+             "stroke": How far out the font is stroked
+        -->
+        <xs:attribute name="outlineSize" type="xs:unsignedInt" use="optional"/>
+
+        <xs:attribute name="outlineR" type="xs:unsignedByte" use="optional"/>      <!-- default = 0. Outline color, red -->
+        <xs:attribute name="outlineG" type="xs:unsignedByte" use="optional"/>      <!-- default = 0. Outline color, green -->
+        <xs:attribute name="outlineB" type="xs:unsignedByte" use="optional"/>      <!-- default = 0. Outline color, blue -->
+        <xs:attribute name="outlineA" type="xs:unsignedByte" use="optional"/>      <!-- default = 255. Outline color, alpha -->
+        <xs:attribute name="language" type="xs:string" use="optional"/>            <!-- ISO-639 -->
+    </xs:complexType>
+
+    <xs:complexType name="SubtitleClipType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:TextRenditionType">
+                <xs:attribute name="id" type="xs:int" use="required"/>
+                <xs:attribute name="length" type="xs:unsignedInt" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Like TransitionType, except we use xs:unsignedInt for duration and only attributes -->
+    <xs:complexType name="NLEJobTransitionType">
+        <xs:sequence>
+            <xs:element name="border" type="tns:BorderType" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="length" type="xs:unsignedInt" use="required"/>
+        <xs:attribute name="wipe" type="xs:int" use="optional"/>
+        <xs:attribute name="transition" type="xs:string" use="optional"/>
+        <xs:attribute name="horizRepeat" type="xs:int" use="optional"/>
+        <xs:attribute name="vertRepeat" type="xs:int" use="optional"/>
+        <xs:attribute name="startPercentage" type="xs:int" use="optional"/>
+        <xs:attribute name="endPercentage" type="xs:int" use="optional"/>
+        <xs:attribute name="reverse" type="xs:boolean" use="optional"/>
+
+        <!-- For internal transcoder use when cutting NLEJobDocuments -->
+        <xs:attribute name="delta" type="xs:unsignedInt" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="TrackSegmentType">
+        <xs:sequence>
+            <xs:element name="effect" type="tns:EffectType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="transition" type="tns:NLEJobTransitionType" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="fillerLength" type="xs:unsignedInt" use="optional"/>    <!-- filler, with the value being the length to fill -->
+        <xs:attribute name="subClip" type="xs:int" use="optional"/>                 <!-- ID of subClip -->
+    </xs:complexType>
+
+    <xs:complexType name="EffectPointType">
+        <xs:attribute name="value" type="xs:float" use="required"/>
+
+        <!-- The position of this value relative to the segment -->
+        <xs:attribute name="position" type="xs:int" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="EffectParameterType">
+        <xs:sequence>
+            <!-- Points are used for changing a parameter's value over time -->
+            <xs:element name="point" type="tns:EffectPointType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required"/>
+
+        <!-- Setting this value causes it to be applied to the segment's entire interval.
+             In other words, it makes the parameter non-temporal.
+        -->
+        <xs:attribute name="value" type="xs:float" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="EffectType">
+        <xs:sequence>
+            <xs:element name="parameter" type="tns:EffectParameterType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+
+
+    <xs:complexType name="TrackType">
+        <xs:sequence>
+            <xs:element name="segment" type="tns:TrackSegmentType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="NLEJobSequenceType">
+        <xs:sequence>
+            <xs:element name="track" type="tns:TrackType" maxOccurs="unbounded"/>   <!-- List of tracks in ascending priority -->
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:int" use="required"/>
+        <xs:attribute name="length" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="NLEJobVideoOutputType">
+        <xs:sequence>
+            <xs:element name="preset" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="uri" type="xs:anyURI" use="optional"/>                  <!-- used when outputing OPAtom -->
+        <xs:attribute name="sequence" type="xs:int" use="required"/>
+        <xs:attribute name="codec" type="xs:string" use="required"/>
+        <xs:attribute name="bitrate" type="xs:unsignedInt" use="required"/>
+        <xs:attribute name="pixelFormat" type="xs:string" use="optional"/>          <!-- needed for choosing between DV variants -->
+        <xs:attribute name="gopSize" type="xs:unsignedShort" use="optional"/>       <!-- set to zero for intra-only -->
+        <xs:attribute name="maxBFrames" type="xs:unsignedShort" use="optional"/>    <!-- maximum number of B-frames between P-frames. zero disables B-frames -->
+    </xs:complexType>
+
+    <xs:complexType name="NLEJobAudioOutputType">
+        <xs:sequence>
+            <xs:element name="sequence" type="xs:int" maxOccurs="unbounded"/>       <!-- Audio sequences are mono, which means we need one sequence per output channel -->
+        </xs:sequence>
+        <xs:attribute name="uri" type="xs:anyURI" use="optional"/>                  <!-- used when outputing OPAtom -->
+        <xs:attribute name="codec" type="xs:string" use="required"/>
+        <xs:attribute name="bitrate" type="xs:unsignedInt" use="optional"/>         <!-- not applicable to PCM -->
+    </xs:complexType>
+
+    <xs:complexType name="NLEJobOutputType">
+        <xs:sequence>
+            <xs:element name="video" type="tns:NLEJobVideoOutputType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="audio" type="tns:NLEJobAudioOutputType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="uri" type="xs:anyURI" use="optional"/>                  <!-- unique URIs are set in each <video> and <audio> element when outputing OPAtoms, hence optional here -->
+        <xs:attribute name="containerFormat" type="xs:string" use="required"/>
+        <xs:attribute name="umid" type="tns:UMIDType" use="optional"/>              <!-- Should be set when outputing OPAtom - generated otherwise -->
+
+        <!-- MaterialPackage -> Name for MXF.
+             Not applicable to most other formats (except maybe MOV).
+        -->
+        <xs:attribute name="clipName" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="NLEJob2VideoOutputType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComplexJobVideoOutputType">
+                <xs:sequence>
+                    <xs:element name="uri" type="xs:anyURI" minOccurs="0" maxOccurs="1" />                  <!-- used when outputing OPAtom -->
+                    <xs:element name="sequence" type="xs:int" minOccurs="1" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="NLEJob2AudioOutputType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:ComplexJobAudioOutputType">
+                <xs:sequence>
+                    <xs:element name="uri" type="xs:anyURI" minOccurs="0" maxOccurs="1" />                  <!-- used when outputing OPAtom -->
+                    <xs:element name="sequence" type="xs:int" maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="NLEJob2OutputType">
+        <xs:sequence>
+            <xs:element name="format" type="tns:ComplexJobOutputFormatType" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="video" type="tns:NLEJob2VideoOutputType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="audio" type="tns:NLEJob2AudioOutputType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="NLEJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:NLEJobType"/>
+    <xs:complexType name="NLEJobType">
+        <xs:complexContent>
+            <xs:extension base="tns:TranscoderJobType">
+        <xs:sequence>
+            <xs:element name="frameRate" type="tns:FrameRateType"/>
+            <xs:element name="width" type="xs:unsignedShort"/>
+            <xs:element name="height" type="xs:unsignedShort"/>
+            <xs:element name="dar" type="tns:AspectRatioType"/>
+            <xs:element name="sampleRate" type="xs:unsignedInt"/>
+
+            <!-- What frame to pause the rendering at.
+                 See ticket #106.
+            -->
+            <xs:element name="pauseFrame" type="xs:unsignedInt" minOccurs="0"/>
+
+            <xs:element name="videoClip" type="tns:VideoClipType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="audioClip" type="tns:AudioClipType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="subtitleClip" type="tns:SubtitleClipType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="sequence" type="tns:NLEJobSequenceType" maxOccurs="unbounded"/>
+            <xs:element name="output" type="tns:NLEJobOutputType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="output2" type="tns:NLEJob2OutputType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- QueueJob -->
+    <xs:element name="QueueJobDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:QueueJobType"/>
+    <xs:complexType name="QueueJobType">
+        <xs:sequence>
+            <!-- Ordered list of jobs to run. Recursion (putting QueueJobs in job elements) is allowed -->
+            <xs:element name="job" type="tns:JobRequestChoiceType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- For specifying one of the valid job request types.
+         Also useful since a virtual funtion in the Job class can return JobRequestChoiceType and have each implementation fill in the correct request -->
+    <xs:complexType name="JobRequestChoiceType">
+        <xs:choice>
+            <xs:element name="timelineRequest" type="tns:TimelineJobRequestType"/>
+            <xs:element name="complexRequest" type="tns:ComplexJobType"/>
+            <xs:element name="movIndexRequest" type="tns:MOVIndexJobType"/>
+            <xs:element name="mxfTimecodeExtractionRequest" type="tns:MXFTimecodeExtractionJobType"/>
+            <xs:element name="mxfOp1bRequest" type="tns:MXFOp1bJobType"/>
+            <xs:element name="segmentationRequest" type="tns:SegmentationJobType"/>
+            <xs:element name="nleRequest" type="tns:NLEJobType"/>
+            <xs:element name="queueRequest" type="tns:QueueJobType"/>
+            <xs:element name="durationRequest" type="tns:DurationJobType"/>
+            <xs:element name="shapeDeductionRequest" type="tns:ShapeDeductionJobType"/>
+            <xs:element name="xmpRequest" type="tns:XMPJobType"/>
+            <xs:element name="hashRequest" type="tns:HashJobType"/>
+            <xs:element name="transferRequest" type="tns:TransferJobType"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="JobLogEntryType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="timestamp" type="xs:dateTime"/>
+                <xs:attribute name="level" type="xs:string"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="SequenceRangeType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="start" type="xs:long" use="required"/>
+                <xs:attribute name="width" type="xs:int" use="optional" />
+                <xs:attribute name="count" type="xs:long" use="required"/>
+                <xs:attribute name="wildcard" type="xs:string" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="JobInputProgressType">
+        <xs:sequence>
+            <!-- Highest (timestamp + duration - startTime) of all packets processed for this input so far -->
+            <xs:element name="mediaTime" type="tns:TimeCodeType"/>
+
+            <!-- Duration of file, if known -->
+            <xs:element name="duration" type="tns:TimeCodeType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- For returning job status in various cases -->
+    <xs:element name="JobStatusDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:JobStatusType" />
+    <xs:complexType name="JobStatusType">
+        <xs:sequence>
+            <xs:element name="statusUri" type="xs:anyURI"/>                               <!-- URI from to which a JobStatusRequestDocument can be sent to poll status -->
+            <xs:element name="id" type="tns:SiteIdType"/>
+            <xs:element name="isRunning" type="xs:boolean"/>
+            <xs:element name="isPaused" type="xs:boolean"/>
+            <xs:element name="walltime" type="xs:double"/>
+            <xs:element name="exitcode" type="xs:int" minOccurs="0"/>                     <!-- Exit code if done running -->
+            <xs:element name="message" type="xs:string" minOccurs="0"/>                   <!-- Possible exit message (exceptions, malformed requests etc.) -->
+            <xs:element name="log" type="tns:JobLogEntryType"
+                minOccurs="0" maxOccurs="unbounded"/>                                     <!-- Log entries with timestamps and levels -->
+            <xs:element name="request" type="tns:JobRequestChoiceType" minOccurs="0"/>    <!-- the request that started this job -->
+            <xs:element name="inputProgress" type="tns:JobInputProgressType"
+                minOccurs="0" maxOccurs="unbounded"/>                                     <!-- Amount of media processed per input file -->
+            <xs:element name="progress" type="xs:float" minOccurs="0"/>                   <!-- Overvall percentage of media processed so far.
+                                                                                               It is only set if all inputs have known durations -->
+            <xs:element name="estimatedTimeLeft" type="xs:float" minOccurs="0"/>          <!-- walltime/(progress/100) - walltime -->
+            <xs:element name="thumbnail" type="tns:ThumbnailInfoType"
+                minOccurs="0" maxOccurs="unbounded" />                                    <!-- Info on thumbnails generated -->
+            <xs:element name="shapeDeductionResponse" type="tns:ShapeDeductionResponse" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="durationResponse" type="tns:DurationResponse" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="xmpResponse" type="tns:XMPResponse" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="hashResponse" type="tns:HashResponse" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="transferResponse" type="tns:TransferResponse" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="XMPResponse">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" />
+            <xs:element name="uri" type="xs:anyURI" />
+            <xs:element name="xmp" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="HashResponse">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" />
+            <xs:element name="uri" type="xs:anyURI" />
+            <xs:element name="function" type="xs:string" />
+            <xs:choice>
+                <xs:element name="hash" type="xs:string" />
+                <xs:element name="error" type="xs:string" />
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TransferResponse">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" />
+            <xs:element name="sourceUri" type="xs:anyURI" minOccurs="1" maxOccurs="unbounded" />
+            <xs:element name="destinationUri" type="xs:anyURI" minOccurs="1" maxOccurs="unbounded" />
+            <xs:element name="error" type="xs:string" minOccurs="0" maxOccurs="1" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ShapeDeductionResponse">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" />
+            <xs:element name="uri" type="xs:anyURI" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="range" type="tns:SequenceRangeType" maxOccurs="unbounded"/>
+            <xs:element name="shape" type="tns:ShapeType" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DurationResponse">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string" />
+            <xs:element name="uri" type="xs:anyURI" />
+            <xs:element name="duration" type="tns:DurationType" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ThumbnailInfoType">
+        <xs:sequence>
+            <xs:element name="timeCode" type="tns:TimeCodeType" />
+            <xs:element name="uri" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="JobStatusListDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:JobStatusListType" />
+
+    <xs:complexType name="JobStatusListType">
+        <xs:sequence>
+            <xs:element name="hits" type="xs:int" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="job" type="tns:JobStatusType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Deprecated -->
+    <xs:element name="SimpleTimelineDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:SimpleTimelineType" />
+    <xs:complexType name="SimpleTimelineType">
+        <xs:sequence>
+            <xs:element name="destinationURI" type="xs:string"/>
+            <xs:element name="source" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="sequence" type="xs:int"/>             <!-- For guaranteeing ordering -->
+                        <xs:choice>                                             <!-- Use URI when talking to transcoder -->
+                            <xs:element name="uri" type="xs:anyURI"/>
+                            <xs:element name="siteId" type="tns:SiteIdType"/>
+                        </xs:choice>
+                        <xs:element name="interval"
+                                        type="tns:TimeIntervalType"/>                   <!-- Interval to use -->
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="TimelineDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:TimelineType" />
+    <xs:complexType name="TimelineType">
+        <xs:sequence>
+            <xs:element name="destination" type="tns:ShapeType"/>
+            <xs:element name="track">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="source" minOccurs="0" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="sequence" type="xs:int"/>             <!-- For guaranteeing ordering -->
+                                    <xs:choice>                                             <!-- Use URI when talking to transcoder -->
+                                        <xs:element name="uri" type="xs:anyURI"/>
+                                        <xs:element name="siteId" type="tns:SiteIdType"/>
+                                    </xs:choice>
+                                    <xs:element name="track" type="xs:string"/>             <!-- Which track in the source to use for this segment -->
+                                    <xs:element name="interval"
+                                        type="tns:TimeIntervalType"/>                   <!-- Interval to use -->
+                                    <xs:element name="transition"
+                                        type="tns:TimeCodeType" minOccurs="0"/>         <!-- Length of transition period following the interval, if any -->
+                                    <xs:element name="effect"
+                                        type="xs:string" minOccurs="0"/>                <!-- Transition effect to use. Default if not set -->
+
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="index" type="xs:string"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Types used for indexing files on tape and other media where seeking is very expensive -->
+    <xs:complexType name="PartialFileRandomIndexType">
+        <xs:sequence>
+            <xs:element name="packet" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:attribute name="pts" type="xs:long"/>             <!-- In MediaComponentType/timeBase units -->
+                    <xs:attribute name="dts" type="xs:long"/>             <!-- In MediaComponentType/timeBase units -->
+                    <xs:attribute name="offset" type="xs:unsignedLong"/>
+                    <xs:attribute name="length" type="xs:unsignedInt"/>
+                    <xs:attribute name="duration" type="xs:unsignedInt"/> <!-- In MediaComponentType/timeBase units -->
+                    <xs:attribute name="stream" type="xs:unsignedByte"/>  <!-- References MediaComponentType/essenceStreamId -->
+                    <xs:attribute name="isKeyFrame" type="xs:boolean"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="PartialFileDVDescriptorType">
+        <xs:sequence>
+            <xs:element name="frameSize" type="xs:unsignedInt"/>
+            <xs:element name="frameCount" type="xs:unsignedInt"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="PartialFileDescriptorDocument" type="tns:PartialFileDescriptorType"/>
+    <xs:complexType name="PartialFileDescriptorType">
+        <xs:sequence>
+            <xs:element name="label" type="xs:string" minOccurs="0"/>
+
+            <xs:element name="transcoderVersion" type="xs:string" minOccurs="0"/>
+
+            <!-- Corresponds to StartTimecode in TimecodeComponent in MXF -->
+            <xs:element name="startTimecode" type="xs:long" minOccurs="0"/>
+
+            <!-- Corresponds to RoundedTimeBase in TimecodeComponent in MXF -->
+            <xs:element name="roundedTimeBase" type="xs:int" minOccurs="0"/>
+
+            <!-- Corresponds to DropFrame in TimecodeComponent in MXF -->
+            <xs:element name="dropFrame" type="xs:boolean" minOccurs="0"/>
+
+            <xs:element name="containerComponent" type="tns:ContainerComponentType" minOccurs="0"/>
+            <xs:element name="audioStream" type="tns:AudioComponentType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="videoStream" type="tns:VideoComponentType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:choice>
+                <xs:element name="dvDescriptor" type="tns:PartialFileDVDescriptorType"/>    <!-- Used for DV -->
+                <xs:element name="index" type="tns:PartialFileRandomIndexType"/>            <!-- Used for MXF, AVI and similar -->
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Types for requesting a byte range for a time interval in a PartialFileDescriptorDocument -->
+    <xs:element name="ByteRangeRequestDocument" type="tns:ByteRangeRequestType"/>
+    <xs:complexType name="ByteRangeRequestType">
+        <xs:sequence>
+            <xs:element name="interval" type="tns:TimeIntervalType"/>
+            <xs:element name="descriptor" type="tns:PartialFileDescriptorType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="ByteRangeResponseDocument" type="tns:ByteRangeResponseType"/>
+    <xs:complexType name="ByteRangeResponseType">
+        <xs:sequence>
+            <xs:element name="start" type="xs:unsignedLong"/>
+            <xs:element name="end" type="xs:unsignedLong"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- XML types for dealing with DMS-1 metadata in MXF -->
+    <xs:simpleType name="InstanceUID">
+        <xs:restriction base="xs:hexBinary"/>
+    </xs:simpleType>
+    <xs:simpleType name="ULType">   <!-- "UL" seems a bit short, so I'm picking ULType -->
+        <xs:restriction base="xs:hexBinary"/>
+    </xs:simpleType>
+    <xs:complexType name="MDObjectBase">
+        <xs:attribute name="name" type="xs:string" use="optional"/>
+        <xs:attribute name="ul" type="tns:ULType" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="MDObjectWeakReference">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:MDObjectBase">
+                <xs:sequence>
+                    <xs:element name="target" type="tns:InstanceUID"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="MDObjectLeaf">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:MDObjectBase">
+                <xs:sequence>
+                    <xs:choice>
+                        <xs:element name="hexValue" type="xs:hexBinary"/>
+                        <xs:element name="stringValue" type="xs:string"/>
+                    </xs:choice>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="MDObjectNode">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:MDObjectBase">
+                <xs:sequence>
+                    <xs:element name="leaf" type="tns:MDObjectLeaf" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="child" type="tns:MDObjectNode" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="strongReference" type="tns:MDObjectStrongReference" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="weakReference" type="tns:MDObjectWeakReference" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+                <xs:attribute name="instanceUid" type="tns:InstanceUID" use="optional"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="MDObjectStrongReference">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:MDObjectNode">
+                <xs:attribute name="referenceUl" type="tns:ULType" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="MDSegment">
+        <xs:sequence>
+            <xs:element name="interval" type="tns:TimeIntervalType"/>
+            <xs:element name="dms1Framework" type="tns:MDObjectNode"/>  <!-- DMS-1 scene or clip framework -->
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="DMS1Document" type="tns:DMS1Type"/>
+    <xs:complexType name="DMS1Type">
+        <xs:sequence>
+            <xs:element name="partition" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="materialPackage" minOccurs="0" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="staticTrack" minOccurs="0" maxOccurs="unbounded">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="dms1Framework" type="tns:MDObjectNode"/>  <!-- DMS-1 production framework -->
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="eventTrack" minOccurs="0" maxOccurs="unbounded">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="segment" type="tns:MDSegment" minOccurs="0" maxOccurs="unbounded"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="offset" type="xs:long"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:simpleType name="UMIDType">
+        <xs:restriction base="xs:hexBinary">
+            <!-- UMIDs are 256 bits -->
+            <xs:minLength value="32"/>
+            <xs:maxLength value="32"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="MXFTimestampType">
+        <xs:sequence>
+            <!-- Corresponds to mxfTimestamp in libMXF -->
+            <xs:element name="year" type="xs:short"/>
+            <xs:element name="month" type="xs:unsignedByte"/>
+            <xs:element name="day" type="xs:unsignedByte"/>
+            <xs:element name="hour" type="xs:unsignedByte"/>
+            <xs:element name="min" type="xs:unsignedByte"/>
+            <xs:element name="sec" type="xs:unsignedByte"/>
+            <xs:element name="qmsec" type="xs:unsignedByte"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="PackageTrackType">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+
+            <!-- Physical track ID, like audio channels -->
+            <xs:element name="number" type="xs:int"/>
+
+            <xs:element name="isPicture" type="xs:boolean"/>
+
+            <xs:element name="is50FPS" minOccurs="0" maxOccurs="1" type="xs:boolean"/>
+
+	    <xs:element name="frameRate" minOccurs="0" maxOccurs="1" type="tns:FrameRateType" />
+
+            <!-- Length of track in edit units -->
+            <xs:element name="length" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="MaterialPackageTrackType">
+        <xs:complexContent>
+            <xs:extension base="tns:PackageTrackType">
+                <xs:sequence>
+                    <xs:element name="sourcePackageID" type="tns:UMIDType"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="TapePackageTrackType">
+        <xs:complexContent>
+            <xs:extension base="tns:PackageTrackType">
+                <xs:sequence>
+                    <xs:element name="trackID" type="xs:int"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="PackageType">
+        <xs:sequence>
+            <xs:element name="umid" type="tns:UMIDType"/>
+            <xs:element name="timestamp" type="tns:MXFTimestampType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="MaterialPackageType">
+        <xs:complexContent>
+            <xs:extension base="tns:PackageType">
+                <xs:sequence>
+                    <xs:element name="track" type="tns:MaterialPackageTrackType" minOccurs="1" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="TapePackageType">
+        <xs:complexContent>
+            <xs:extension base="tns:PackageType">
+                <xs:sequence>
+                    <xs:element name="track" type="tns:TapePackageTrackType" minOccurs="1" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <!-- Needed for muxing OpAtom -->
+    <xs:complexType name="MXFPackagesType">
+        <xs:sequence>
+            <xs:element name="materialPackage" type="tns:MaterialPackageType"/>
+            <xs:element name="tapePackage" type="tns:TapePackageType" minOccurs="0"/>
+
+            <!-- Material package track to link to file package track, like "V1" -->
+            <xs:element name="materialTrackName" type="xs:string"/>
+
+            <!-- Tape package track to link file package track to, like "V1".
+                 Must be set if tapePackage is set.
+            -->
+            <xs:element name="tapeTrackName" type="xs:string" minOccurs="0"/>
+	    <xs:element name="projectEditRate" type="tns:FrameRateType" minOccurs="0" maxOccurs="1" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--- START METADATA TYPES -->
+
+    <xs:complexType name="KeyValuePairType">
+        <xs:sequence>
+            <xs:element name="key" minOccurs="1" maxOccurs="1" type="xs:string"/>
+            <xs:element name="value" minOccurs="1" maxOccurs="1" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--
+         MetadataReferenceType is only used when posting new metadata.
+         They only need to be unique within the same MetadataDocument.
+         The middleware will transform them to proper UUIDs, unless they already formatted as UUIDs pointing to existing metadata.
+     -->
+    <xs:simpleType name="MetadataReferenceType">
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+
+    <xs:complexType name="MetadataGroupValueType">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="referenced" type="tns:MetadataReferencedType" minOccurs="0" maxOccurs="1"/>
+            <xs:choice>
+                <xs:sequence>
+                    <xs:element name="field" type="tns:MetadataFieldValueType" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="group" type="tns:MetadataGroupValueType" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+                <xs:sequence>
+                    <xs:element name="reference" type="tns:MetadataReferenceType" minOccurs="1" maxOccurs="1"/>
+                </xs:sequence>
+            </xs:choice>
+            <xs:element name="data" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePairType"/>
+        </xs:sequence>
+        <xs:attributeGroup ref="tns:MetadataValueAttributes"/>
+    </xs:complexType>
+
+    <xs:complexType name="MetadataFieldValueType">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="id" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="referenced" type="tns:MetadataReferencedType" minOccurs="0" maxOccurs="1"/>
+            <xs:choice>
+                <xs:element name="value" type="tns:MetadataValueType" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="reference" type="tns:MetadataReferenceType" minOccurs="1" maxOccurs="1"/>
+            </xs:choice>
+            <xs:element name="data" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePairType"/>
+            <xs:element name="type" minOccurs="0" maxOccurs="1" type="tns:MetadataFieldType"/>
+        </xs:sequence>
+        <xs:attributeGroup ref="tns:MetadataValueAttributes"/>
+        <xs:attribute name="track" type="xs:string" use="optional"/>
+        <xs:attribute name="inheritance" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="MetadataReferencedType">
+        <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="uuid" type="xs:string" use="required"/>
+        <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="MetadataValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attributeGroup ref="tns:MetadataValueAttributes"/>
+                <xs:attribute name="lang" type="xs:language" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:attributeGroup name="MetadataValueAttributes">
+        <xs:attribute name="uuid" type="tns:MetadataReferenceType" use="optional"/>
+        <xs:attribute name="user" type="xs:string" use="optional"/>
+        <xs:attribute name="timestamp" type="xs:dateTime" use="optional"/>
+        <xs:attribute name="change" type="tns:SiteIdType" use="optional"/>
+        <xs:attribute name="conflict" type="xs:boolean" use="optional"/>
+        <xs:attribute name="mode"  type="tns:MetadataModeType" use="optional"/>
+    </xs:attributeGroup>
+
+    <xs:simpleType name="MetadataModeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="add"/>
+            <xs:enumeration value="remove"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name="MetadataDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:MetadataType" />
+    <xs:complexType name="MetadataType">
+        <xs:sequence maxOccurs="1" minOccurs="1">
+            <xs:element name="revision" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="template" type="xs:string" minOccurs="0" maxOccurs="1"/> <!-- obsolete -->
+            <xs:element name="group" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="timespan" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="field" type="tns:MetadataFieldValueType" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:element name="group" type="tns:MetadataGroupValueType" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                    <xs:attribute name="start" type="xs:string" />
+                    <xs:attribute name="end" type="xs:string" />
+                    <xs:attribute name="base" type="xs:string" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- END METADATA TYPES -->
+
+    <!-- START METADATA FIELD TYPE TYPES -->
+
+    <xs:simpleType name="MetadataFieldTypeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="date"/>
+            <xs:enumeration value="date-noindex"/>
+            <xs:enumeration value="date-sortable"/>
+            <xs:enumeration value="float"/>
+            <xs:enumeration value="float-noindex"/>
+            <xs:enumeration value="float-sortable"/>
+            <xs:enumeration value="integer"/>
+            <xs:enumeration value="integer-noindex"/>
+            <xs:enumeration value="integer-sortable"/>
+            <xs:enumeration value="long"/>
+            <xs:enumeration value="long-noindex"/>
+            <xs:enumeration value="string"/>
+            <xs:enumeration value="string-sortable"/>
+            <xs:enumeration value="string-exact"/>
+            <xs:enumeration value="string-exact-sortable"/>
+            <xs:enumeration value="string-noindex"/>
+            <xs:enumeration value="boolean"/>
+            <xs:enumeration value="boolean-noindex"/>
+            <xs:enumeration value="timeCode"/>
+            <xs:enumeration value="timeCode-noindex"/>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="MetadataFieldIndexType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="noindex"/>
+            <xs:enumeration value="index"/>
+            <xs:enumeration value="extend"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="MetadataFieldFloatType">
+        <xs:sequence>
+            <xs:element name="minInclusive" type="xs:double" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="maxInclusive" type="xs:double" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="MetadataFieldIntegerType">
+        <xs:sequence>
+            <xs:element name="minInclusive" type="xs:int" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="maxInclusive" type="xs:int" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="MetadataFieldLongType">
+        <xs:sequence>
+            <xs:element name="minInclusive" type="xs:long" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="maxInclusive" type="xs:long" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="MetadataFieldStringType">
+        <xs:sequence>
+            <xs:element name="minLength" type="xs:int" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="maxLength" type="xs:int" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="pattern" type="xs:string" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="MetadataFieldDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:MetadataFieldType" />
+    <xs:complexType name="MetadataFieldType">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="schema" type="tns:MetadataSchemaElementType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="type" type="tns:MetadataFieldTypeType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="index" type="tns:MetadataFieldIndexType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="fullText" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+            <xs:choice minOccurs="0" maxOccurs="1">
+                <xs:element name="floatRestriction" type="tns:MetadataFieldFloatType"/>
+                <xs:element name="integerRestriction" type="tns:MetadataFieldIntegerType"/>
+                <xs:element name="longRestriction" type="tns:MetadataFieldLongType"/>
+                <xs:element name="stringRestriction" type="tns:MetadataFieldStringType"/>
+            </xs:choice>
+            <xs:element name="data" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePairType"/>
+            <xs:element name="values" minOccurs="0" maxOccurs="1" type="tns:SimpleMetadataType"/>
+            <xs:element name="defaultValue" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="externalId" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="origin" type="xs:string" minOccurs="0" maxOccurs="1" />
+        </xs:sequence>
+        <xs:attribute name="system" type="xs:string" use="optional"/>
+        <xs:attribute name="sortable" type="xs:boolean" use="optional"/>
+        <xs:attribute name="inheritance" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <!-- END METADATA FIELD TYPE TYPES -->
+
+    <xs:complexType name="SimpleMetadataType">
+        <xs:sequence>
+            <!-- TODO: use tns:KeyValuePairType instead -->
+            <xs:element name="field" minOccurs="0" maxOccurs="unbounded" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="key" type="xs:string" />
+                        <xs:element name="value" type="xs:string" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Decode/encode permissions and license document. Wildcards are allowed.
+         Example how a license document allowing any input to be transcoded to H.264+MP3 might look like:
+             <TranscoderLicenseStatusDocument>
+                 <mayDecode>*</mayDecode>
+                 <mayEncode>*mp3*</mayEncode>
+                 <mayEncode>*264*</mayEncode>
+             </TranscoderLicenseStatusDocument>
+    -->
+    <xs:element name="TranscoderLicenseStatusDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:TranscoderLicenseStatusType"/>
+    <xs:complexType name="TranscoderLicenseStatusType">
+        <xs:sequence>
+            <xs:element name="mayDecode" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="mayEncode" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="production" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Returned by the transcoder's duration resource -->
+    <xs:element name="DurationDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:DurationType"/>
+    <xs:complexType name="DurationType">
+        <xs:sequence>
+            <!-- duration = max_x{ptsInterval.end_x} - min_x{ptsInterval.start_x} -->
+            <xs:element name="duration" type="tns:TimeCodeType"/>
+
+            <!-- Information about the individual video streams
+                 duration = stream.end - stream.start
+            -->
+            <xs:element name="stream" type="tns:StreamIntervalType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="StreamIntervalType">
+        <xs:complexContent>
+            <xs:extension xmlns:tns="http://xml.vidispine.com/schema/vidispine" base="tns:TimeIntervalType">
+                <!-- AKA essenceStreamId -->
+                <xs:attribute name="index" type="xs:unsignedShort" use="required"/>
+
+                <!-- number of frames decoded -->
+                <xs:attribute name="numberOfFrames" type="xs:int" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="TranscoderVersionDocument" xmlns:tns="http://xml.vidispine.com/schema/vidispine" type="tns:TranscoderVersionType"/>
+    <xs:complexType name="TranscoderVersionType">
+        <xs:sequence>
+            <xs:element name="version" type="xs:string" minOccurs="1" maxOccurs="1" />
+            <xs:element name="submodule" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                        <xs:element name="version" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="info" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="feature" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                        <xs:element name="version" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                        <xs:element name="info" type="tns:KeyValuePairType" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+
+</xs:schema>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://xml.vidispine.com/schema/vidispine"
+    elementFormDefault="qualified"
+    xmlns:tns="http://xml.vidispine.com/schema/vidispine">
+    <!-- Schemas for transcoder configurations -->
+    <xs:simpleType name="GUIDType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\{([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="CarbonPreset">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+            <xs:element name="containerFormat" type="xs:string"/>
+            <xs:element name="videoCodec" type="xs:string"/>
+            <xs:element name="audioCodec" type="xs:string"/>
+            <xs:element name="displayAspectRatio" type="tns:AspectRatioType"/>
+            <xs:element name="GUID" type="tns:GUIDType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="PluginType">
+        <xs:sequence>
+            <xs:element name="alias" type="xs:string"/>
+            <xs:element name="fileName" type="xs:string"/>  <!-- Name of .dll/.so file -->
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="AddressPortType">
+        <xs:sequence>
+            <xs:choice>
+                <xs:element name="host" type="xs:string"/>
+                <xs:element name="address" type="xs:string"/>
+            </xs:choice>
+            <xs:element name="port" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="StatsDRecieverType">
+        <xs:sequence>
+            <xs:element name="destination" type="tns:AddressPortType"/>
+            <xs:element name="prefix" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="REDDecoderType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="CPU"/>
+            <xs:enumeration value="CUDA"/> <!-- default, will fall back to CPU if CUDA is not available -->
+            <xs:enumeration value="OPENCL"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="TranscoderConfigurationDocument" type="tns:TranscoderConfigurationType" />
+    <xs:complexType name="TranscoderConfigurationType">
+            <xs:sequence>
+                <!-- TODO: replace these two with an AddressPortType element -->
+                <xs:element name="address" type="xs:string"/>
+                <xs:element name="port" type="xs:int"/>
+
+                <!-- Number of threads to use in encoders.
+                     Applies mostly to MainConcept and libx264 as of writing.
+
+                      Not set = Leave thread count alone. This means a single thread for libavcodec, auto for MainConcept.
+                      0       = Auto.
+                      >=1     = Use specified number of threads. Should be somewhere around 150% of the number of cores.
+                -->
+                <xs:element name="encoderThreads" type="xs:int" minOccurs="0"/>
+                <xs:element name="decoderOfferThreads" type="xs:int" minOccurs="0"/>
+                <xs:element name="apiUsername" type="xs:string"/>
+                <xs:element name="apiPassword" type="xs:string"/>
+
+                <!-- If set, grab TranscoderLicenseStatusDocuments from apiURL/API/transcoder-validate
+                     Else, wait for such documents to be PUT on /license
+                     See T#114
+                -->
+                <xs:element name="apiURL" type="tns:AddressPortType" minOccurs="0"/>
+                <xs:element name="thumbnailResolution" type="tns:ResolutionType"/>
+                <xs:element name="thumbnailPeriod" type="tns:TimeCodeType" minOccurs="0" />
+                <xs:element name="bilinearEffects" type="xs:boolean"/>              <!-- If true, use bilinear filtering for effects -->
+                <xs:element name="carbonServer" minOccurs="0" maxOccurs="unbounded" type="tns:AddressPortType"/>
+                <xs:element name="carbonPreset" type="tns:CarbonPreset" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="faceDetectorPlugin" type="tns:PluginType" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="dataPath" type="xs:string"/>
+                <xs:element name="presetPath" type="xs:string"/>
+                <xs:element name="tempPath" type="xs:string" minOccurs="0" />
+                <xs:element name="proresDecoder" minOccurs="0" type="tns:AddressPortType"/>
+                <xs:element name="proresEncoder" minOccurs="0" type="tns:AddressPortType"/>
+                <xs:element name="vp6Encoder" minOccurs="0" type="tns:AddressPortType"/>
+                <xs:element name="vp6EncoderPoolSize" minOccurs="0" type="xs:int"/>
+                <xs:element name="logo" minOccurs="0" type="xs:string"/>
+                <xs:element name="imagemagick" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePairType"/>
+                <xs:element name="logLevel" minOccurs="0" type="xs:string"/>
+                <xs:element name="statsd" type="tns:StatsDRecieverType" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="readBufferLength" type="xs:int" minOccurs="0"/>
+                <xs:element name="dataBufferSize" type="xs:int" minOccurs="0"/>
+                <xs:element name="dataBufferWriteSize" type="xs:int" minOccurs="0"/>
+                <xs:element name="dataBufferFlushTime" type="xs:int" minOccurs="0"/>
+                <xs:element name="colorProfilePath" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="redDecoderType" type="tns:REDDecoderType" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+    </xs:complexType>
+
+    <!-- Schemas for communicating with Carbon -->
+    <xs:complexType name="CarbonJobInfoType">
+        <xs:sequence>
+            <xs:element name="Failures" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Warnings" type="xs:string" minOccurs="0"/>
+                        <xs:element name="Errors" type="xs:string" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="GUID" type="tns:GUIDType" use="required"/>
+        <xs:attribute name="State" type="xs:string" use="required"/>
+        <xs:attribute name="Status" type="xs:string" use="required"/>
+        <xs:attribute name="Progress.DWD" type="xs:int" use="required"/>
+        <xs:attribute name="Speed.DBL" type="xs:double" use="optional"/>                <!-- Not documented -->
+        <xs:attribute name="Description" type="xs:string" use="required"/>
+        <xs:attribute name="User" type="xs:string" use="required"/>
+        <xs:attribute name="SourceDescription" type="xs:string" use="required"/>
+        <xs:attribute name="AgentIP" type="xs:string" use="required"/>
+        <xs:attribute name="Priority.DWD" type="xs:int" use="required"/>
+        <xs:attribute name="Capabilities.DWD" type="xs:int" use="optional"/>            <!-- Not documented -->
+        <xs:attribute name="DeleteProcessedSource.DWD" type="xs:int" use="optional"/>   <!-- Not documented -->
+        <xs:attribute name="DeleteRealAsset.DWD" type="xs:int" use="optional"/>         <!-- Not documented -->
+        <xs:attribute name="CheckInTime" type="xs:string" use="required"/>
+        <xs:attribute name="CheckInTime_CNLT" type="xs:string" use="required"/>
+        <xs:attribute name="CheckInTime_SCM" type="xs:string" use="required"/>
+        <xs:attribute name="CheckInTimePrecise.QWD" type="xs:long" use="optional"/>     <!-- Not documented -->
+        <xs:attribute name="StartTime" type="xs:string" use="optional"/>
+        <xs:attribute name="StartTime_CNLT" type="xs:string" use="optional"/>
+        <xs:attribute name="StartTime_SCM" type="xs:string" use="optional"/>
+        <xs:attribute name="CompletedTime" type="xs:string" use="optional"/>
+        <xs:attribute name="CompletedTime_CNLT" type="xs:string" use="optional"/>
+        <xs:attribute name="CompletedTime_SCM" type="xs:string" use="optional"/>
+        <xs:attribute name="Error" type="xs:string" use="optional"/>                    <!-- Not documented -->
+    </xs:complexType>
+    <xs:element name="Reply">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="JobInfo" type="tns:CarbonJobInfoType" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="GUID" type="tns:GUIDType" use="optional"/>
+            <xs:attribute name="Success" type="xs:string" use="required"/>
+            <xs:attribute name="Error" type="xs:string" use="optional"/>
+            <xs:attribute name="NrOfJobs.DWD" type="xs:int" use="optional"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
+

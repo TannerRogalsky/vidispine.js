@@ -1,0 +1,15 @@
+{
+  "name": "vidispine.js",
+  "version": "1.0.0",
+  "description": "API helper for Vidispine",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "author": "Tanner Rogalsky <tanner@tannerrogalsky.com>",
+  "license": "MIT",
+  "dependencies": {
+    "request": "^2.81.0",
+    "xml2js": "^0.4.19"
+  }
+}
